@@ -1,13 +1,16 @@
 from Ax12 import Ax12
 
-Ax12.DEVICENAME = 'COM3'
+# e.g 'COM3' windows or '/dev/ttyUSB0' for Linux
+Ax12.DEVICENAME = '/dev/ttyUSB0'
+
 Ax12.BAUDRATE = 1_000_000
 
 # sets baudrate and opens com port
 Ax12.connect()
 
 # create AX12 instance with ID 10 
-my_dxl = Ax12(10)  
+motor_id = 10
+my_dxl = Ax12(motor_id)  
 my_dxl.set_moving_speed(200)
 
 
@@ -34,7 +37,7 @@ def main(motor_object):
               (motor_object.id, motor_object.get_present_position()))
         bool_test = user_input()
 
-# takes AX12 object
+# pass in AX12 object
 main(my_dxl)
 
 # disconnect
