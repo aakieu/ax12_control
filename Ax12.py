@@ -67,6 +67,7 @@ class Ax12:
     PROTOCOL_VERSION = 1.0
     BAUDRATE = 1_000_000  # Dynamixel default baudrate
     DEVICENAME = '/dev/ttyUSB0'  # e.g 'COM3' windows or '/dev/ttyUSB0' for linux
+    DEBUG = True
 
     def __init__(self, motor_id):
         """Initialize motor with id"""
@@ -141,7 +142,11 @@ class Ax12:
         return self.get_register1(ADDR_AX_BAUD_RATE)
 
     def set_baudrate(self, baudrate):
+        
         self.set_register1(ADDR_AX_BAUD_RATE, baudrate)
+
+        if self.DEBUG:
+            self.print_status("Baudrate of ", self.id, self.get_baudrate())
 
     def get_return_delay_time(self):
         return self.get_register1(ADDR_AX_RETURN_DELAY_TIME)
@@ -155,6 +160,8 @@ class Ax12:
     def set_cw_angle_limit(self, angle_limit):
         """Sets the lower limit of motor angle [512-0]"""
         self.set_register2(ADDR_AX_CW_ANGLE_LIMIT_L, angle_limit)
+        if self.DEBUG:
+            self.print_status("cw angle limit of ", self.id, self.get_cw_angle_limit())
 
     def get_ccw_angle_limit(self):
         return self.get_register2(ADDR_AX_CCW_ANGLE_LIMIT_L)
@@ -162,6 +169,8 @@ class Ax12:
     def set_ccw_angle_limit(self, angle_limit):
         """Sets the upper limit of motor angle [512-1023]"""
         self.set_register2(ADDR_AX_CCW_ANGLE_LIMIT_L, angle_limit)
+        if self.DEBUG:
+            self.print_status("ccw angle limit of ", self.id, self.get_ccw_angle_limit())
 
     def get_min_voltage_limit(self):
         return self.get_register1(ADDR_AX_MIN_LIMIT_VOLTAGE)
@@ -204,7 +213,16 @@ class Ax12:
         return self.get_register1(ADDR_AX_TORQUE_ENABLE)
 
     def set_torque_enable(self, torque_bool):
+        """ set torque on/off 
+
+        """
         self.set_register1(ADDR_AX_TORQUE_ENABLE, torque_bool)
+        
+        if self.DEBUG: 
+            self.print_status("Torque enable ", self.id, self.get_torque_enable())
+
+
+
 
     def set_led(self, led_bool):
         """Sets Motor Led; 0 => OFF  1 => ON ."""
@@ -235,10 +253,14 @@ class Ax12:
         self.set_register1(ADDR_AX_CW_COMPLIANCE_SLOPE, comp_slope)
 
     def get_goal_position(self):
-        return self.set_register2(ADDR_AX_GOAL_POSITION_L)
+        return self.get_register2(ADDR_AX_GOAL_POSITION_L)
 
     def set_goal_position(self, goal_pos):
+        """Write goal position."""
         self.set_register2(ADDR_AX_GOAL_POSITION_L, goal_pos)
+
+        if self.DEBUG: 
+            self.print_status("Position of ", self.id, self.get_goal_position())
 
     def get_moving_speed(self):
         """Returns moving speed to goal position [0-1023]."""
@@ -247,6 +269,10 @@ class Ax12:
     def set_moving_speed(self, moving_speed):
         """Set the moving speed to goal position [0-1023]."""
         self.set_register2(ADDR_AX_GOAL_SPEED_L, moving_speed)
+        
+        if self.DEBUG:
+            self.print_status("Moving speed of ", self.id, self.get_moving_speed())
+
 
     def get_torque_limit(self):
         return self.get_register2(ADDR_AX_TORQUE_LIMIT_L)
@@ -265,6 +291,21 @@ class Ax12:
 
     def set_punch(self, punch_val):
         self.set_register1(ADDR_AX_PUNCH_L, punch_val)
+
+    # other functions
+    def enable_torque(self):
+        """Enable torque for motor."""
+        self.set_register1(ADDR_AX_TORQUE_ENABLE, 1)
+        if self.DEBUG:
+            print("Torque has been successfully enabled for dxl ID: %d" % self.id) 
+
+
+    def disable_torque(self):
+        """Disable torque."""
+        self.set_register1(ADDR_AX_TORQUE_ENABLE, 0)
+        if self.DEBUG: 
+            print("Torque has been successfully disabled for dxl ID: %d" % self.id)
+
 
     @classmethod
     def open_port(cls):
@@ -303,3 +344,15 @@ class Ax12:
             print("%s" % Ax12.packetHandler.getTxRxResult(comm_result))
         elif dxl_err != 0:
             print("%s" % Ax12.packetHandler.getRxPacketError(dxl_err))
+
+    @staticmethod
+    def raw2deg(delta_raw):
+        return round(delta_raw*(300/1023),2)
+
+    @staticmethod
+    def deg2raw(delta_deg):
+        return int(delta_deg*(1023/300))
+
+    @staticmethod
+    def print_status(dxl_property, dxl_id, value):
+            print(dxl_property +  "dxl ID: %d set to %d " % (dxl_id, value))
